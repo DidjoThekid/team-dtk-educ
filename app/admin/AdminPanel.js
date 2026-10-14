@@ -60,7 +60,8 @@ function Support() {
       </div>
       <div className="mut">{t.name} · <a href={`mailto:${t.email}?subject=Re: ${encodeURIComponent(t.subject)}`}>{t.email}</a> · {fmt(t.createdAt)}</div>
       <p>{t.message}</p>
-      {(t.replies || []).map((r, i) => <div key={i} className="mut">↳ Note admin ({fmt(r.at)}) : {r.text}</div>)}
+      {(t.replies || []).map((r, i) => <div key={i} className="mut">↳ Note de {r.by || 'l’équipe'} ({fmt(r.at)}) : {r.text}</div>)}
+      {t.modBy && <div className="mut">Dernière action : {t.modBy}</div>}
       <input placeholder="Note interne" value={replies[t.id] || ''} onChange={(e) => setReplies({ ...replies, [t.id]: e.target.value })} />
       <div className="row">
         <button className="sec" onClick={async () => { if (replies[t.id]) { await api('support', 'PATCH', { id: t.id, reply: replies[t.id] }); setReplies({ ...replies, [t.id]: '' }); load(); } }}>Ajouter la note</button>
@@ -98,7 +99,7 @@ function Moderation() {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{p.pseudo}</b><span className="badge">{p.status}</span>
           </div>
-          <div className="mut">{fmt(p.createdAt)}</div>
+          <div className="mut">{fmt(p.createdAt)}{p.modBy && ` · modéré par ${p.modBy}`}</div>
           <p>{p.text}</p>
           <div className="row">
             {p.status !== 'visible' && <button onClick={() => act(p.id, 'visible')}>Approuver</button>}
@@ -120,7 +121,7 @@ function Settings() {
   return (
     <div className="card">
       <h3>Mode maintenance</h3>
-      <p className="mut">Quand il est activé, les visiteurs voient seulement le message ci-dessous. /admin reste accessible.</p>
+      <p className="mut">Quand il est activé, les visiteurs voient seulement le message ci-dessous. L'équipe Team DTK garde l'accès.</p>
       <label><input type="checkbox" style={{ width: 'auto' }} checked={s.maintenance} onChange={(e) => save({ ...s, maintenance: e.target.checked })} /> Maintenance activée</label>
       <textarea rows={3} defaultValue={s.maintenanceMessage} onBlur={(e) => save({ ...s, maintenanceMessage: e.target.value })} />
     </div>
@@ -132,20 +133,24 @@ const TABS = {
   news: ['📰 Actualités', News], support: ['🎧 Support', Support], moderation: ['🛡️ Modération', Moderation],
   reglages: ['⚙️ Réglages', Settings], demo: ['🧪 Démo', Demo],
 };
+const MOD_TABS = ['annonces', 'news', 'support', 'moderation']; // onglets visibles par un modérateur
 
-export default function AdminPanel() {
-  const [tab, setTab] = useState('annonces');
+export default function AdminPanel({ staff }) {
+  const keys = Object.keys(TABS).filter((k) => staff.level === 'fondateur' || MOD_TABS.includes(k));
+  const [tab, setTab] = useState(keys[0]);
   const Current = TABS[tab][1];
   return (
     <div className="wrap">
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <h1>Panel admin</h1>
-        <button className="sec" onClick={async () => { await fetch('/api/admin/login', { method: 'DELETE' }); location.reload(); }}>Déconnexion</button>
+        <h1>Admin Team DTK</h1>
+        <div className="row">
+          <span className="mut">{staff.name} · {staff.level}</span>
+          <a href="/app"><button className="sec">Retour au site</button></a>
+          <button className="sec" onClick={async () => { await fetch('/api/portal/login', { method: 'DELETE' }); location.href = '/login'; }}>Déconnexion</button>
+        </div>
       </div>
       <div className="tabs">
-        {Object.entries(TABS).map(([k, [label]]) => (
-          <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>
-        ))}
+        {keys.map((k) => (<button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{TABS[k][0]}</button>))}
       </div>
       <Current key={tab} />
     </div>
