@@ -58,7 +58,7 @@ function Edt({ me }) {
           <h3>{name}</h3>
           {t.filter((x) => x.day === i + 1).sort((a, b) => a.start.localeCompare(b.start)).map((x) => (
             <div key={x.id} className="slot"><b>{x.start}–{x.end}</b> {x.subject}
-              <div className="mut">{me.role === 'prof' ? `Classe ${x.classId}` : x.teacher} · salle {x.room}</div></div>
+              <div className="mut">{me.role === 'prof' ? `Groupe ${x.classId}` : x.teacher} · salle {x.room}</div></div>
           ))}
         </div>
       ))}
@@ -174,7 +174,7 @@ function Messages() {
     <>
       <AddForm res="messages" onDone={load} label="Envoyer">
         <h3>Nouveau message</h3>
-        <select name="to" required>{c.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}</select>
+        <select name="to" required>{c.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.role === 'prof' ? 'manager' : 'membre'})</option>)}</select>
         <input name="subject" placeholder="Objet" />
         <textarea name="text" rows={3} placeholder="Message" required />
       </AddForm>
@@ -240,8 +240,9 @@ export default function Portal({ me }) {
   return (
     <>
       <div className="top">
-        <b>🎓 Espace scolaire</b>
-        <span>{me.name} · {me.role === 'prof' ? 'Professeur' : `Élève ${me.classId}`}{' '}
+        <b>🎓 Team DTK</b>
+        <span>{me.name} · {me.role === 'prof' ? 'Manager' : `Membre ${me.classId}`}{' '}
+          {me.staff && <a href="/admin" style={{ color: '#fff', marginRight: 10 }}>⚙️ Admin</a>}
           <button onClick={async () => { await fetch('/api/portal/login', { method: 'DELETE' }); location.href = '/login'; }}>Déconnexion</button></span>
       </div>
       <div className="wrap">
