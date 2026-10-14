@@ -23,17 +23,25 @@ export function Users() {
         <h3>Nouveau compte</h3>
         <input name="name" placeholder="Nom complet" required />
         <input name="login" placeholder="Identifiant (a-z, 0-9)" required autoCapitalize="none" />
-        <select name="role"><option value="eleve">Élève</option><option value="prof">Professeur</option></select>
-        <input name="classId" placeholder="Classe (élèves, ex. 4B)" />
+        <select name="role"><option value="eleve">Membre</option><option value="prof">Manager</option></select>
+        <select name="staff">
+          <option value="">Pas d'accès admin</option>
+          <option value="moderateur">Modérateur Team DTK</option>
+          <option value="fondateur">Fondateur</option>
+        </select>
+        <input name="classId" placeholder="Groupe / classe (ex. 4B)" />
         <input name="password" placeholder="Mot de passe (6+ caractères)" required />
         <button>Créer</button> <span className="mut">{msg}</span>
       </form>
       <div className="card"><table><tbody>
         {list.map((u) => (
           <tr key={u.id}>
-            <td><b>{u.name}</b><div className="mut">{u.login}</div></td><td>{u.role}</td><td>{u.classId}</td>
+            <td><b>{u.name}</b><div className="mut">{u.login}</div></td>
+            <td>{u.role === 'prof' ? 'manager' : 'membre'}{u.staff && ` · ${u.staff}`}</td>
+            <td>{u.classId}</td>
             <td className="row">
               <button className="sec" onClick={async () => { const p = prompt('Nouveau mot de passe (6+) ?'); if (p) setMsg((await api('users', 'PATCH', { id: u.id, password: p })).error || 'Mot de passe changé ✅'); }}>Mot de passe</button>
+              <button className="sec" onClick={async () => { const v = prompt('Accès admin : moderateur, fondateur, ou vide pour retirer', u.staff || ''); if (v !== null) { await api('users', 'PATCH', { id: u.id, staff: v.trim() }); load(); } }}>Accès admin</button>
               <button className="del" onClick={async () => { if (confirm(`Supprimer ${u.name} ?`)) { await api('users', 'DELETE', null, `?id=${u.id}`); load(); } }}>Supprimer</button>
             </td>
           </tr>
@@ -57,11 +65,11 @@ export function Timetable() {
     <>
       <form className="card" onSubmit={add}>
         <h3>Ajouter un cours</h3>
-        <input name="classId" placeholder="Classe (ex. 4B)" required />
+        <input name="classId" placeholder="Groupe / classe (ex. 4B)" required />
         <select name="day">{[1, 2, 3, 4, 5].map((d) => <option key={d} value={d}>{DAYS[d]}</option>)}</select>
         <div className="row"><input name="start" type="time" required style={{ flex: 1 }} /><input name="end" type="time" required style={{ flex: 1 }} /></div>
         <input name="subject" placeholder="Matière" required />
-        <input name="teacher" placeholder="Professeur (nom exact du compte)" required />
+        <input name="teacher" placeholder="Manager (nom exact du compte)" required />
         <input name="room" placeholder="Salle" />
         <button>Ajouter</button>
       </form>
@@ -88,7 +96,7 @@ export function News() {
   return (
     <>
       <form className="card" onSubmit={add}>
-        <h3>Actualité de l'établissement</h3>
+        <h3>Actualité Team DTK</h3>
         <input name="title" placeholder="Titre" required />
         <textarea name="text" rows={3} placeholder="Texte" required />
         <button>Publier</button>
