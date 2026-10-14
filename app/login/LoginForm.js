@@ -15,10 +15,10 @@ export default function LoginForm() {
         <p className="mut">Connecte-toi avec l'identifiant donné par ton établissement.</p>
         <input name="login" placeholder="Identifiant" required autoFocus autoCapitalize="none" />
         <input name="password" type="password" placeholder="Mot de passe" required />
-        <button>Connexion</button> <span style={{ color: 'var(--err)' }}>{err}</span>
         <p className="mut" style={{ marginTop: 10 }}>
           Vous êtes prof ? <a href="mailto:team-dtk@outlook.com">Contactez-nous par mail à team-dtk@outlook.com</a> pour créer votre classe !
         </p>
+        <button>Connexion</button> <span style={{ color: 'var(--err)' }}>{err}</span>
       </form>
     </div>
   );
