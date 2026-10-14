@@ -1,10 +1,12 @@
-import { isAdmin } from '../../lib/auth';
+import { redirect } from 'next/navigation';
+import { getStaff } from '../../lib/auth';
 import AdminPanel from './AdminPanel';
-import Login from './Login';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Admin', robots: { index: false } };
+export const metadata = { title: 'Admin Team DTK', robots: { index: false } };
 
-export default function AdminPage() {
-  return isAdmin() ? <AdminPanel /> : <Login />;
+export default async function AdminPage() {
+  const s = await getStaff();
+  if (!s) redirect('/login');
+  return <AdminPanel staff={{ name: s.name, level: s.staff }} />;
 }
