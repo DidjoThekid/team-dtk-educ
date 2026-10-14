@@ -1,13 +1,23 @@
 import { cookies } from 'next/headers';
 import { readJSON } from '../../../../lib/db';
-import { verifyPassword, makeSession } from '../../../../lib/auth';
+import { verifyPassword, makeSession, checkPassword, FOUNDER_ID } from '../../../../lib/auth';
+
+const setSid = (id) =>
+  cookies().set('sid', makeSession(id), { httpOnly: true, secure: true, sameSite: 'strict', path: '/', maxAge: 7 * 86400 });
 
 export async function POST(req) {
   const { login, password } = await req.json().catch(() => ({}));
-  const users = await readJSON('users', []);
-  const u = users.find((x) => x.login === String(login || '').trim().toLowerCase());
-  if (!u || !verifyPassword(password, u.hash)) return Response.json({ error: 'Identifiant ou mot de passe incorrect' }, { status: 401 });
-  cookies().set('sid', makeSession(u.id), { httpOnly: true, secure: true, sameSite: 'strict', path: '/', maxAge: 7 * 86400 });
+  const lg = String(login || '').trim().toLowerCase();
+  const founder = (process.env.FOUNDER_LOGIN || '').trim().toLowerCase();
+
+  if (founder && lg === founder && checkPassword(password)) {
+    setSid(FOUNDER_ID);
+    return Response.json({ ok: true });
+  }
+  const u = (await readJSON('users', [])).find((x) => x.login === lg);
+  if (!u || lg === founder || !verifyPassword(password, u.hash))
+    return Response.json({ error: 'Identifiant ou mot de passe incorrect' }, { status: 401 });
+  setSid(u.id);
   return Response.json({ ok: true });
 }
 
